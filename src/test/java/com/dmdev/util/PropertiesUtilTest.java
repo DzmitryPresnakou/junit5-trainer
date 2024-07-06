@@ -1,50 +1,29 @@
 package com.dmdev.util;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
-import java.io.FileWriter;
-import java.io.IOException;
+import java.util.stream.Stream;
 
-import static com.dmdev.util.PropertiesUtil.properties;
-import static org.assertj.core.api.Assertions.assertThat;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class PropertiesUtilTest {
 
-    public static final String PROPERTY_FILE_WITH_PATH = "src/test/resources/application.properties";
-
-    @Test
-    void get() {
-
-        String property = "db.name=h2";
-
-        writeStringInPropertyFile(property);
-
-        String key = "db.name";
-
+    @ParameterizedTest
+    @MethodSource("getPropertyArguments")
+    void checkGet(String key, String expectedValue) {
         String actualResult = PropertiesUtil.get(key);
 
-        assertThat(actualResult).isEqualTo("h2");
-
+        assertEquals(expectedValue, actualResult);
     }
 
-    private static void writeStringInPropertyFile(String property) {
-
-        try {
-            FileWriter writer = new FileWriter(PROPERTY_FILE_WITH_PATH, true);
-
-            writer.write("\n" + "db.name=h2");
-
-            writer.close();
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    static Stream<Arguments> getPropertyArguments() {
+        return Stream.of(
+                Arguments.of("db.url", "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1"),
+                Arguments.of("db.user", "sa"),
+                Arguments.of("db.password", "111"),
+                Arguments.of("db.driver", "org.h2.Driver")
+        );
     }
-
-//    @Test
-//    void shouldThrowExceptionIfKeyInvalid() {
-//
-//
-//    }
 }
