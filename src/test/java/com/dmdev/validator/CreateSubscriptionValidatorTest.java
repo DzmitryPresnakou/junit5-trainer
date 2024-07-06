@@ -8,6 +8,9 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -17,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 class CreateSubscriptionValidatorTest {
 
     private final CreateSubscriptionValidator validator = CreateSubscriptionValidator.getInstance();
+    private static final LocalDateTime EXPIRATION_DATE = LocalDateTime.of(2030, Month.DECEMBER, 31, 23, 59, 59);
 
     @Test
     void shouldPassValidation() {
@@ -25,7 +29,7 @@ class CreateSubscriptionValidatorTest {
                 .userId(1)
                 .name("firstSubscription")
                 .provider(Provider.APPLE.name())
-                .expirationDate(Instant.now().plusSeconds(20000))
+                .expirationDate(EXPIRATION_DATE.toInstant(ZoneOffset.UTC))
                 .build();
 
         ValidationResult actualResult = validator.validate(dto);
@@ -39,7 +43,7 @@ class CreateSubscriptionValidatorTest {
                 .userId(null)
                 .name("firstSubscription")
                 .provider(Provider.APPLE.name())
-                .expirationDate(Instant.now().plusSeconds(20000))
+                .expirationDate(EXPIRATION_DATE.toInstant(ZoneOffset.UTC))
                 .build();
 
         ValidationResult actualResult = validator.validate(dto);
@@ -54,7 +58,7 @@ class CreateSubscriptionValidatorTest {
                 .userId(1)
                 .name(null)
                 .provider(Provider.APPLE.name())
-                .expirationDate(Instant.now().plusSeconds(20000))
+                .expirationDate(EXPIRATION_DATE.toInstant(ZoneOffset.UTC))
                 .build();
 
         ValidationResult actualResult = validator.validate(dto);
@@ -69,7 +73,7 @@ class CreateSubscriptionValidatorTest {
                 .userId(1)
                 .name("firstSubscription")
                 .provider("fake")
-                .expirationDate(Instant.now().plusSeconds(20000))
+                .expirationDate(EXPIRATION_DATE.toInstant(ZoneOffset.UTC))
                 .build();
 
         ValidationResult actualResult = validator.validate(dto);
