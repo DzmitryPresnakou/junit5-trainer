@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Clock;
@@ -22,8 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -64,6 +64,8 @@ class SubscriptionServiceTest {
         List<Subscription> subscriptionList = new ArrayList<>();
         subscriptionList.add(subscription);
 
+        lenient().when(createSubscriptionMapper.map(subscriptionDto)).thenReturn(subscription);
+
         doReturn(subscriptionList).when(subscriptionDao).findByUserId(subscriptionDto.getUserId());
 
         doReturn(subscription).when(subscriptionDao).upsert(subscription);
@@ -74,7 +76,6 @@ class SubscriptionServiceTest {
 
         assertThat(actualResult).isEqualTo(subscription);
     }
-
 
     @Test
     void upsertFailed() {
