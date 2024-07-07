@@ -8,24 +8,22 @@ import com.dmdev.entity.Subscription;
 import com.dmdev.mapper.CreateSubscriptionMapper;
 import com.dmdev.validator.CreateSubscriptionValidator;
 import com.dmdev.validator.ValidationResult;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.ZoneOffset;
-import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
 
-import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -63,23 +61,18 @@ class SubscriptionServiceTest {
                 .expirationDate(EXPIRATION_DATE.toInstant(ZoneOffset.UTC))
                 .build();
 
-        doReturn(Optional.of(subscription)).when(subscriptionDao).findById(subscription.getId());
-        doReturn(subscription).when(createSubscriptionMapper).map(subscriptionDto);
+        List<Subscription> subscriptionList = new ArrayList<>();
+        subscriptionList.add(subscription);
+
+        doReturn(subscriptionList).when(subscriptionDao).findByUserId(subscriptionDto.getUserId());
+
+        doReturn(subscription).when(subscriptionDao).upsert(subscription);
+
         when(createSubscriptionValidator.validate(subscriptionDto)).thenReturn(new ValidationResult());
 
         Subscription actualResult = subscriptionService.upsert(subscriptionDto);
 
-
-
-
         assertThat(actualResult).isEqualTo(subscription);
-
-//        doReturn(Optional.of(subscription)).when(subscriptionDao).findByUserId(subscription.getUserId());
-//        doReturn(subscription).when(createSubscriptionMapper).map(subscriptionDto);
-//
-//        Subscription actualResult = subscriptionService.upsert(subscriptionDto);
-//
-//        assertThat(actualResult).isPresent();
     }
 
 
