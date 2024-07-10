@@ -5,11 +5,15 @@ import com.dmdev.dto.CreateSubscriptionDto;
 import com.dmdev.entity.Provider;
 import com.dmdev.entity.Status;
 import com.dmdev.entity.Subscription;
+import com.dmdev.exception.SubscriptionException;
 import com.dmdev.mapper.CreateSubscriptionMapper;
 import com.dmdev.validator.CreateSubscriptionValidator;
 import com.dmdev.validator.ValidationResult;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -21,8 +25,10 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -60,7 +66,6 @@ class SubscriptionServiceTest {
         assertThat(actualResult).isEqualTo(subscription);
     }
 
-
     @Test
     void upsertFailed() {
         Subscription subscription = getSubscription(null, Status.ACTIVE);
@@ -86,17 +91,68 @@ class SubscriptionServiceTest {
         subscriptionService.cancel(subscription.getId());
 
         verify(subscriptionDao, times(1)).update(subscription);
-
     }
 
     @Test
-    void expireSuccess() {
-        Subscription subscription = getSubscription(1, Status.ACTIVE);
+    void cancelFailedBySubscription() {
+        Subscription subscription = getSubscription(1, Status.CANCELED);
+
+        doReturn(Optional.of(subscription)).when(subscriptionDao).findById(subscription.getId());
+
+        assertThatThrownBy(() -> subscriptionService.cancel(subscription.getId())).isInstanceOf(SubscriptionException.class);
+    }
+
+    @ParameterizedTest
+    @MethodSource("getWrongStatuses")
+    void cancelFailedByIllegalArgument(Status status) {
+        Subscription subscription = getSubscription(1, status);
+
+        doThrow(new IllegalArgumentException()).when(subscriptionDao).findById(subscription.getId());
+
+        assertThatThrownBy(() -> subscriptionService.cancel(subscription.getId())).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @ParameterizedTest
+    @MethodSource("getStatuses")
+    void expireSuccess(Status status) {
+        Subscription subscription = getSubscription(1, status);
 
         doReturn(Optional.of(subscription)).when(subscriptionDao).findById(subscription.getId());
         subscriptionService.expire(subscription.getId());
 
         verify(subscriptionDao, times(1)).update(subscription);
+    }
+
+    @Test
+    void expireFailedBySubscription() {
+        Subscription subscription = getSubscription(1, Status.EXPIRED);
+
+        doReturn(Optional.of(subscription)).when(subscriptionDao).findById(subscription.getId());
+
+        assertThatThrownBy(() -> subscriptionService.expire(subscription.getId())).isInstanceOf(SubscriptionException.class);
+    }
+
+    @Test
+    void expireFailedByIllegalArgument() {
+        Subscription subscription = getSubscription(1, Status.EXPIRED);
+
+        doThrow(new IllegalArgumentException()).when(subscriptionDao).findById(subscription.getId());
+
+        assertThatThrownBy(() -> subscriptionService.expire(subscription.getId())).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    static Stream<Arguments> getStatuses() {
+        return Stream.of(
+                Arguments.of(Status.ACTIVE),
+                Arguments.of(Status.CANCELED)
+        );
+    }
+
+    static Stream<Arguments> getWrongStatuses() {
+        return Stream.of(
+                Arguments.of(Status.CANCELED),
+                Arguments.of(Status.EXPIRED)
+        );
     }
 
     private static CreateSubscriptionDto getCreateSubscriptionDto(Integer userId) {
