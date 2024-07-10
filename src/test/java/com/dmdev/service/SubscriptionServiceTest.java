@@ -6,8 +6,10 @@ import com.dmdev.entity.Provider;
 import com.dmdev.entity.Status;
 import com.dmdev.entity.Subscription;
 import com.dmdev.exception.SubscriptionException;
+import com.dmdev.exception.ValidationException;
 import com.dmdev.mapper.CreateSubscriptionMapper;
 import com.dmdev.validator.CreateSubscriptionValidator;
+import com.dmdev.validator.Error;
 import com.dmdev.validator.ValidationResult;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,6 +31,7 @@ import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -50,7 +53,7 @@ class SubscriptionServiceTest {
     @Test
     void upsertSuccess() {
         Subscription subscription = getSubscription(1, Status.ACTIVE);
-        CreateSubscriptionDto subscriptionDto = getCreateSubscriptionDto(1);
+        CreateSubscriptionDto subscriptionDto = getCreateSubscriptionDto();
 
         List<Subscription> subscriptionList = new ArrayList<>();
         subscriptionList.add(subscription);
@@ -67,20 +70,15 @@ class SubscriptionServiceTest {
     }
 
     @Test
-    void upsertFailed() {
-        Subscription subscription = getSubscription(null, Status.ACTIVE);
-        CreateSubscriptionDto subscriptionDto = getCreateSubscriptionDto(null);
+    void shouldThrowExceptionIfDtoInvalid() {
+        CreateSubscriptionDto subscriptionDto = getCreateSubscriptionDto();
+        ValidationResult validationResult = new ValidationResult();
+        validationResult.add(Error.of(100, "userId is invalid"));
 
-        List<Subscription> subscriptionList = new ArrayList<>();
-        subscriptionList.add(subscription);
+        doReturn(validationResult).when(createSubscriptionValidator).validate(subscriptionDto);
 
-        doReturn(new ValidationResult()).when(createSubscriptionValidator).validate(subscriptionDto);
-        doReturn(subscriptionList).when(subscriptionDao).findByUserId(subscriptionDto.getUserId());
-
-        Subscription actualResult = subscriptionService.upsert(subscriptionDto);
-
-        assertThat(actualResult).isNull();
-        verifyNoInteractions(createSubscriptionMapper);
+        assertThrows(ValidationException.class, () -> subscriptionService.upsert(subscriptionDto));
+        verifyNoInteractions(subscriptionDao, createSubscriptionMapper);
     }
 
     @Test
@@ -94,7 +92,7 @@ class SubscriptionServiceTest {
     }
 
     @Test
-    void cancelFailedBySubscription() {
+    void cancelFailedBySubscriptionException() {
         Subscription subscription = getSubscription(1, Status.CANCELED);
 
         doReturn(Optional.of(subscription)).when(subscriptionDao).findById(subscription.getId());
@@ -104,7 +102,7 @@ class SubscriptionServiceTest {
 
     @ParameterizedTest
     @MethodSource("getWrongStatuses")
-    void cancelFailedByIllegalArgument(Status status) {
+    void cancelFailedByIllegalArgumentException(Status status) {
         Subscription subscription = getSubscription(1, status);
 
         doThrow(new IllegalArgumentException()).when(subscriptionDao).findById(subscription.getId());
@@ -124,7 +122,7 @@ class SubscriptionServiceTest {
     }
 
     @Test
-    void expireFailedBySubscription() {
+    void expireFailedBySubscriptionException() {
         Subscription subscription = getSubscription(1, Status.EXPIRED);
 
         doReturn(Optional.of(subscription)).when(subscriptionDao).findById(subscription.getId());
@@ -133,7 +131,7 @@ class SubscriptionServiceTest {
     }
 
     @Test
-    void expireFailedByIllegalArgument() {
+    void expireFailedByIllegalArgumentException() {
         Subscription subscription = getSubscription(1, Status.EXPIRED);
 
         doThrow(new IllegalArgumentException()).when(subscriptionDao).findById(subscription.getId());
@@ -155,9 +153,9 @@ class SubscriptionServiceTest {
         );
     }
 
-    private static CreateSubscriptionDto getCreateSubscriptionDto(Integer userId) {
+    private static CreateSubscriptionDto getCreateSubscriptionDto() {
         return CreateSubscriptionDto.builder()
-                .userId(userId)
+                .userId(1)
                 .name("firstSubscription")
                 .provider(Provider.APPLE.name())
                 .expirationDate(EXPIRATION_DATE.toInstant(ZoneOffset.UTC))
