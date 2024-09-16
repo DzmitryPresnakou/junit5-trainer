@@ -20,10 +20,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.Clock;
-import java.time.LocalDateTime;
-import java.time.Month;
-import java.time.ZoneOffset;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -31,9 +30,13 @@ import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.InstanceOfAssertFactories.OPTIONAL_INT;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 @ExtendWith(MockitoExtension.class)
 class SubscriptionServiceTest {
@@ -44,13 +47,10 @@ class SubscriptionServiceTest {
     private CreateSubscriptionMapper createSubscriptionMapper;
     @Mock
     private CreateSubscriptionValidator createSubscriptionValidator;
-    @Mock
-    private Clock clock;
-
     @InjectMocks
     private SubscriptionService subscriptionService;
 
-    private static final LocalDateTime EXPIRATION_DATE = LocalDateTime.of(2030, Month.DECEMBER, 31, 23, 59, 59);
+    private static final Instant EXPIRATION_DATE = Instant.now().plus(Duration.ofDays(30)).truncatedTo(ChronoUnit.SECONDS);
 
     @Test
     void upsertSuccess() {
@@ -145,7 +145,7 @@ class SubscriptionServiceTest {
                 .userId(1)
                 .name("firstSubscription")
                 .provider(Provider.APPLE.name())
-                .expirationDate(EXPIRATION_DATE.toInstant(ZoneOffset.UTC))
+                .expirationDate(EXPIRATION_DATE)
                 .build();
     }
 
@@ -155,7 +155,7 @@ class SubscriptionServiceTest {
                 .userId(userId)
                 .name("firstSubscription")
                 .provider(Provider.APPLE)
-                .expirationDate(EXPIRATION_DATE.toInstant(ZoneOffset.UTC))
+                .expirationDate(EXPIRATION_DATE)
                 .status(status)
                 .build();
     }

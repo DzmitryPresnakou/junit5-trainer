@@ -9,19 +9,21 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import java.time.LocalDateTime;
-import java.time.Month;
-import java.time.ZoneOffset;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SubscriptionDaoIT extends IntegrationTestBase {
 
-    private static final LocalDateTime EXPIRATION_DATE = LocalDateTime.of(2030, Month.DECEMBER, 31, 23, 59, 59);
+    private static final Instant EXPIRATION_DATE = Instant.now().plus(Duration.ofDays(30)).truncatedTo(ChronoUnit.SECONDS);
     private final SubscriptionDao subscriptionDao = SubscriptionDao.getInstance();
 
     @Test
@@ -73,7 +75,6 @@ class SubscriptionDaoIT extends IntegrationTestBase {
         subscriptionDao.insert(subscription);
         subscription.setName("updated subscription");
         subscription.setProvider(Provider.GOOGLE);
-
         subscriptionDao.update(subscription);
 
         Subscription updatedSubscription = subscriptionDao.findById(subscription.getId()).get();
@@ -113,7 +114,7 @@ class SubscriptionDaoIT extends IntegrationTestBase {
                 .userId(userId)
                 .name(name)
                 .provider(Provider.APPLE)
-                .expirationDate(EXPIRATION_DATE.toInstant(ZoneOffset.UTC))
+                .expirationDate(EXPIRATION_DATE)
                 .status(Status.ACTIVE)
                 .build();
     }

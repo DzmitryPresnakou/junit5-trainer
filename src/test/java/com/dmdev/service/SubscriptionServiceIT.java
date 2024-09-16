@@ -12,9 +12,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Clock;
-import java.time.LocalDateTime;
-import java.time.Month;
-import java.time.ZoneOffset;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -23,7 +23,7 @@ public class SubscriptionServiceIT extends IntegrationTestBase {
 
     private SubscriptionService subscriptionService;
     private SubscriptionDao subscriptionDao;
-    private static final LocalDateTime EXPIRATION_DATE = LocalDateTime.of(2030, Month.DECEMBER, 31, 23, 59, 59);
+    private static final Instant EXPIRATION_DATE = Instant.now().plus(Duration.ofDays(30)).truncatedTo(ChronoUnit.SECONDS);
 
     @BeforeEach
     void init() {
@@ -71,7 +71,7 @@ public class SubscriptionServiceIT extends IntegrationTestBase {
                 .userId(1)
                 .name(name)
                 .provider(Provider.APPLE)
-                .expirationDate(EXPIRATION_DATE.toInstant(ZoneOffset.UTC))
+                .expirationDate(EXPIRATION_DATE)
                 .status(Status.ACTIVE)
                 .build();
     }
