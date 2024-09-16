@@ -2,8 +2,9 @@ package com.dmdev.exception;
 
 import com.dmdev.validator.Error;
 import com.dmdev.validator.ValidationResult;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class ValidationExceptionTest {
 
@@ -15,6 +16,6 @@ class ValidationExceptionTest {
 
         ValidationException validationException = new ValidationException(validationResult.getErrors());
 
-        Assertions.assertThat(validationException.getErrors().size()).isEqualTo(2);
+        assertThat(validationException.getErrors().size()).isEqualTo(2);
     }
 }

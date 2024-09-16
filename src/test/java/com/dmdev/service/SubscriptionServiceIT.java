@@ -8,12 +8,16 @@ import com.dmdev.entity.Subscription;
 import com.dmdev.integration.IntegrationTestBase;
 import com.dmdev.mapper.CreateSubscriptionMapper;
 import com.dmdev.validator.CreateSubscriptionValidator;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.time.*;
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.time.ZoneOffset;
 import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class SubscriptionServiceIT extends IntegrationTestBase {
 
@@ -21,25 +25,9 @@ public class SubscriptionServiceIT extends IntegrationTestBase {
     private SubscriptionDao subscriptionDao;
     private static final LocalDateTime EXPIRATION_DATE = LocalDateTime.of(2030, Month.DECEMBER, 31, 23, 59, 59);
 
-
     @BeforeEach
     void init() {
-        Clock clock = new Clock() {
-            @Override
-            public ZoneId getZone() {
-                return null;
-            }
-
-            @Override
-            public Clock withZone(ZoneId zone) {
-                return null;
-            }
-
-            @Override
-            public Instant instant() {
-                return Instant.now();
-            }
-        };
+        Clock clock = Clock.systemUTC();
         subscriptionDao = SubscriptionDao.getInstance();
         subscriptionService = new SubscriptionService(
                 subscriptionDao,
@@ -54,8 +42,8 @@ public class SubscriptionServiceIT extends IntegrationTestBase {
         Subscription subscription = subscriptionDao.insert(getSubscription("subscription1"));
 
         Subscription actualResult = subscriptionService.upsert(getCreateSubscriptionDto(subscription));
-
-        Assertions.assertThat(actualResult.getId()).isEqualTo(subscription.getId());
+        assertThat(actualResult.getId()).isEqualTo(subscription.getId());
+        assertThat(actualResult.getStatus()).isEqualTo(Status.ACTIVE);
     }
 
     @Test
@@ -63,10 +51,9 @@ public class SubscriptionServiceIT extends IntegrationTestBase {
         Subscription subscription = subscriptionDao.insert(getSubscription("subscription1"));
 
         subscriptionService.cancel(subscription.getId());
-
         Optional<Subscription> actualResult = subscriptionDao.findById(subscription.getId());
-
-        Assertions.assertThat(actualResult).isPresent();
+        assertThat(actualResult).isPresent();
+        assertThat(actualResult.get().getStatus()).isEqualTo(Status.CANCELED);
     }
 
     @Test
@@ -74,10 +61,9 @@ public class SubscriptionServiceIT extends IntegrationTestBase {
         Subscription subscription = subscriptionDao.insert(getSubscription("subscription1"));
 
         subscriptionService.expire(subscription.getId());
-
         Optional<Subscription> actualResult = subscriptionDao.findById(subscription.getId());
-
-        Assertions.assertThat(actualResult).isPresent();
+        assertThat(actualResult).isPresent();
+        assertThat(actualResult.get().getStatus()).isEqualTo(Status.EXPIRED);
     }
 
     private Subscription getSubscription(String name) {

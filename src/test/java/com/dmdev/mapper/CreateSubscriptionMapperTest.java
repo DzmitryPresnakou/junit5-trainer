@@ -19,7 +19,6 @@ class CreateSubscriptionMapperTest {
 
     @Test
     void map() {
-
         CreateSubscriptionDto dto = CreateSubscriptionDto.builder()
                 .userId(1)
                 .name("firstSubscription")
