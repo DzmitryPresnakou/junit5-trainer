@@ -72,12 +72,14 @@ class SubscriptionDaoIT extends IntegrationTestBase {
     @Test
     void update() {
         Subscription subscription = getSubscription(1, "Subscription");
+
         subscriptionDao.insert(subscription);
         subscription.setName("updated subscription");
         subscription.setProvider(Provider.GOOGLE);
         subscriptionDao.update(subscription);
 
         Subscription updatedSubscription = subscriptionDao.findById(subscription.getId()).get();
+
         assertThat(updatedSubscription).isEqualTo(subscription);
     }
 

@@ -57,8 +57,7 @@ class SubscriptionServiceTest {
         Subscription subscription = getSubscription(1, Status.ACTIVE);
         CreateSubscriptionDto subscriptionDto = getCreateSubscriptionDto();
 
-        List<Subscription> subscriptionList = new ArrayList<>();
-        subscriptionList.add(subscription);
+        List<Subscription> subscriptionList = List.of(subscription);
 
         doReturn(new ValidationResult()).when(createSubscriptionValidator).validate(subscriptionDto);
         lenient().when(createSubscriptionMapper.map(subscriptionDto)).thenReturn(subscription);
@@ -66,8 +65,6 @@ class SubscriptionServiceTest {
         doReturn(subscription).when(subscriptionDao).upsert(subscription);
 
         Subscription actualResult = subscriptionService.upsert(subscriptionDto);
-
-        assertThat(actualResult).isNotNull();
         assertThat(actualResult).isEqualTo(subscription);
     }
 

@@ -21,9 +21,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class SubscriptionServiceIT extends IntegrationTestBase {
 
+    private static final Instant EXPIRATION_DATE = Instant.now().plus(Duration.ofDays(30)).truncatedTo(ChronoUnit.SECONDS);
     private SubscriptionService subscriptionService;
     private SubscriptionDao subscriptionDao;
-    private static final Instant EXPIRATION_DATE = Instant.now().plus(Duration.ofDays(30)).truncatedTo(ChronoUnit.SECONDS);
 
     @BeforeEach
     void init() {
@@ -64,6 +64,7 @@ public class SubscriptionServiceIT extends IntegrationTestBase {
         Optional<Subscription> actualResult = subscriptionDao.findById(subscription.getId());
         assertThat(actualResult).isPresent();
         assertThat(actualResult.get().getStatus()).isEqualTo(Status.EXPIRED);
+        assertThat(actualResult.get().getExpirationDate().truncatedTo(ChronoUnit.SECONDS)).isEqualTo(Instant.now().truncatedTo(ChronoUnit.SECONDS));
     }
 
     private Subscription getSubscription(String name) {

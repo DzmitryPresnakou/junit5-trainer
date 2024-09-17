@@ -23,7 +23,6 @@ class CreateSubscriptionValidatorTest {
 
     @Test
     void shouldPassValidation() {
-
         CreateSubscriptionDto dto = CreateSubscriptionDto.builder()
                 .userId(1)
                 .name("firstSubscription")
