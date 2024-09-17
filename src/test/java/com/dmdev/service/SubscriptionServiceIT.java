@@ -24,10 +24,11 @@ public class SubscriptionServiceIT extends IntegrationTestBase {
     private static final Instant EXPIRATION_DATE = Instant.now().plus(Duration.ofDays(30)).truncatedTo(ChronoUnit.SECONDS);
     private SubscriptionService subscriptionService;
     private SubscriptionDao subscriptionDao;
+    private Clock clock;
 
     @BeforeEach
     void init() {
-        Clock clock = Clock.systemUTC();
+        clock = Clock.systemUTC();
         subscriptionDao = SubscriptionDao.getInstance();
         subscriptionService = new SubscriptionService(
                 subscriptionDao,
@@ -64,7 +65,7 @@ public class SubscriptionServiceIT extends IntegrationTestBase {
         Optional<Subscription> actualResult = subscriptionDao.findById(subscription.getId());
         assertThat(actualResult).isPresent();
         assertThat(actualResult.get().getStatus()).isEqualTo(Status.EXPIRED);
-        assertThat(actualResult.get().getExpirationDate().truncatedTo(ChronoUnit.SECONDS)).isEqualTo(Instant.now().truncatedTo(ChronoUnit.SECONDS));
+        assertThat(actualResult.get().getExpirationDate().truncatedTo(ChronoUnit.SECONDS)).isEqualTo(Instant.now(clock).truncatedTo(ChronoUnit.SECONDS));
     }
 
     private Subscription getSubscription(String name) {
